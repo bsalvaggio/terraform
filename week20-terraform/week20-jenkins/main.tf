@@ -55,7 +55,7 @@ resource "aws_security_group" "jenkins_security_group" {
   description = "Security group for Jenkins EC2 instance"
   vpc_id      = aws_vpc.vpc.id
 
-    # Allow traffic on port 22 (SSH) from any IP address
+  # Allow traffic on port 22 (SSH) from any IP address
   ingress {
     from_port   = 22
     to_port     = 22
@@ -67,6 +67,13 @@ resource "aws_security_group" "jenkins_security_group" {
   ingress {
     from_port   = 8080
     to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "http"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -89,24 +96,8 @@ resource "aws_instance" "instance" {
   tags = {
     Name = "my-instance"
   }
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo yum -y update
-              
-              # Install Java
-              sudo amazon-linux-extras install java-openjdk11 -y
-              
-              # Add the Jenkins repository
-              sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat/jenkins.repo
-              sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
-              
-              # Install Jenkins
-              sudo yum -y install jenkins
-              
-              # Enable and start Jenkins
-              sudo systemctl enable jenkins
-              sudo systemctl start jenkins
-              EOF
+
+  user_data = file("jenkinsuserdata.sh")
 }
 
 # Create an S3 bucket for Jenkins artifacts
@@ -125,5 +116,4 @@ resource "aws_s3_bucket_acl" "jenkins_artifacts_acl" {
 output "instance_public_ip" {
   value       = aws_instance.instance.public_ip
   description = "The public IP address of the EC2 instance"
-}
 }
