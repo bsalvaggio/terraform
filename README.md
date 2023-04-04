@@ -1,4 +1,4 @@
 terraform projects
 =======
-repo for terraform exercises and projects
+repo for terraform coursework, exercises & projects
 
