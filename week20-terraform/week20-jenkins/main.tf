@@ -55,12 +55,12 @@ resource "aws_security_group" "jenkins_security_group" {
   description = "Security group for Jenkins EC2 instance"
   vpc_id      = aws_vpc.vpc.id
 
-  # Allow traffic on port 22 (SSH) from your IP address
+    # Allow traffic on port 22 (SSH) from any IP address
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["98.118.136.96/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # Allow traffic on port 8080 (Jenkins) from any IP address
@@ -125,4 +125,5 @@ resource "aws_s3_bucket_acl" "jenkins_artifacts_acl" {
 output "instance_public_ip" {
   value       = aws_instance.instance.public_ip
   description = "The public IP address of the EC2 instance"
+}
 }
