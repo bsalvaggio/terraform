@@ -1,7 +1,3 @@
-provider "aws" {
-  region = var.aws_region
-}
-
 # Create a VPC
 resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr_block
@@ -14,8 +10,9 @@ resource "aws_vpc" "vpc" {
 
 # Create a subnet within the VPC
 resource "aws_subnet" "subnet" {
-  cidr_block = "10.0.1.0/24"
-  vpc_id     = aws_vpc.vpc.id
+  cidr_block              = var.subnet_cidr_block
+  vpc_id                  = aws_vpc.vpc.id
+  map_public_ip_on_launch = var.auto_ipv4
   tags = {
     Name = "Jenkins Subnet"
   }
@@ -24,29 +21,24 @@ resource "aws_subnet" "subnet" {
 # Create an Internet Gateway and attach it to the VPC
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
+
   tags = {
     Name = "Jenkins Internet Gateway"
   }
 }
 
-# Create a route table and associate it with the VPC
-resource "aws_route_table" "route_table" {
-  vpc_id = aws_vpc.vpc.id
+# Modify the default route table
+resource "aws_default_route_table" "public_route_table" {
+  default_route_table_id = aws_vpc.vpc.default_route_table_id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.all_traffic
     gateway_id = aws_internet_gateway.igw.id
   }
-
   tags = {
-    Name = "Jenkins Route Table"
+    Name      = "${var.app_name}_public_rt"
+    Terraform = "true"
   }
-}
-
-# Associate the route table with the subnet
-resource "aws_route_table_association" "route_table_association" {
-  subnet_id      = aws_subnet.subnet.id
-  route_table_id = aws_route_table.route_table.id
 }
 
 # Create a security group for the Jenkins EC2 instance
@@ -79,6 +71,14 @@ resource "aws_security_group" "jenkins_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow inbound traffic on all ports and protocols
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # Allow outbound traffic on all ports and protocols
   egress {
     from_port   = 0
@@ -108,11 +108,12 @@ resource "aws_instance" "instance" {
 resource "aws_s3_bucket" "billsjenkins_artifacts" {
   bucket = var.bucket_name
   tags = {
-    Name = "BIlls Jenkins Artifacts Bucketwk20"
+    Name = "${var.bucket_name}_bucket"
   }
 }
+
+# Output the public IP of the instance
 output "instance_public_ip" {
   value       = aws_instance.instance.public_ip
   description = "The public IP address of the EC2 instance"
-  depends_on  = [aws_instance.instance]
 }
