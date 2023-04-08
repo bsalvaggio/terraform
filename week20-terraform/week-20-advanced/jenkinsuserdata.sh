@@ -6,27 +6,29 @@ sudo yum update -y
 # Download the Jenkins repository configuration file and place it in the appropriate directory
 sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 
-# Import the Jenkins repository GPG key to ensure package integrity
-sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+# Import the Jenkins repository GPG key 
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
 
 # Upgrade all installed packages to their latest versions
-sudo yum upgrade
+sudo yum upgrade -y
 
 # Install Java OpenJDK 11
 sudo amazon-linux-extras install java-openjdk11 -y
 
+# Echo the start of Jenkins installation
+echo "Starting Jenkins installation..."
+
 # Install Jenkins from the repository
 sudo yum install jenkins -y
 
-# Enable the Jenkins service to start automatically at boot
+# Echo the successful completion of Jenkins installation
+echo "Jenkins installation successful!"
+
+# Enable Jenkins to start automatically at boot
 sudo systemctl enable jenkins
 
-# Start the Jenkins service
-sudo systemctl start jenkins
+# Reload the systemd manager configuration
+sudo systemctl daemon-reload
 
-# Configure the firewall to allow connections on port 8080
-sudo yum install firewalld -y
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
-sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
-sudo firewall-cmd --reload
+# Start Jenkins 
+sudo systemctl start jenkins
