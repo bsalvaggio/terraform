@@ -1,8 +1,8 @@
 # Configure the S3 backend for storing Terraform state
 terraform {
   backend "s3" {
-    bucket = "<your_bucket_name>"
+    bucket = "week21"
     key    = "terraform.tfstate"
-    region = "us-west-2"
+    region = "us-east-2"
   }
 }
